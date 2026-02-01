@@ -1,5 +1,7 @@
 pluginManagement {
     repositories {
+        mavenCentral()
+        maven("https://maven.myket.ir")
         google {
             content {
                 includeGroupByRegex("com\\.android.*")
@@ -7,18 +9,19 @@ pluginManagement {
                 includeGroupByRegex("androidx.*")
             }
         }
-        mavenCentral()
         gradlePluginPortal()
     }
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        google()
         mavenCentral()
+        maven("https://maven.myket.ir")
+        google()
     }
 }
 
 rootProject.name = "remote-compose"
 include(":app")
+include(":server")
  
