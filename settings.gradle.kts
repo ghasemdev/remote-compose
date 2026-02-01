@@ -1,7 +1,6 @@
 pluginManagement {
     repositories {
         mavenCentral()
-        maven("https://maven.myket.ir")
         google {
             content {
                 includeGroupByRegex("com\\.android.*")
@@ -9,6 +8,7 @@ pluginManagement {
                 includeGroupByRegex("androidx.*")
             }
         }
+        maven("https://maven.myket.ir")
         gradlePluginPortal()
     }
 }
@@ -16,8 +16,8 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         mavenCentral()
-        maven("https://maven.myket.ir")
         google()
+        maven("https://maven.myket.ir")
     }
 }
 

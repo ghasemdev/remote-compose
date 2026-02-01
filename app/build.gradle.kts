@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.parsomash.remote.compose"
-        minSdk = 24
+        minSdk = 29
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -81,6 +81,10 @@ dependencies {
     
     // Kotlin Serialization
     implementation(libs.kotlinx.serialization.json)
+    
+    // Security
+    implementation(libs.bouncycastle.provider)
+    implementation(libs.bouncycastle.pkix)
     
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)

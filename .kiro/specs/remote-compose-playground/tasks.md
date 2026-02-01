@@ -6,7 +6,7 @@ This implementation plan converts the Remote Compose playground design into disc
 
 ## Tasks
 
-- [-] 1. Set up project structure and dependencies
+- [x] 1. Set up project structure and dependencies
   - Create Android project with proper package structure (com.parsomash.remote.compose)
   - Add androidx.compose.remote dependencies (remote-core, remote-creation, remote-player modules)
   - Add Ktor server and client dependencies

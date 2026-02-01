@@ -38,6 +38,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     
     // Security
+    implementation(libs.bouncycastle.provider)
+    implementation(libs.bouncycastle.pkix)
+    
+    // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     
     // Logging
