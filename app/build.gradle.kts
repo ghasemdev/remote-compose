@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotest)
 }
 
 android {
@@ -40,6 +41,7 @@ android {
             freeCompilerArgs.set(
                 listOf(
                     "-Xconsistent-data-class-copy-visibility",
+                    "-Xannotation-default-target=param-property",
                 ),
             )
         }
@@ -49,7 +51,11 @@ android {
         buildConfig = true
     }
     packaging {
-        resources.excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+        resources.excludes += setOf(
+            "META-INF/versions/9/OSGI-INF/MANIFEST.MF",
+            "META-INF/AL2.0",
+            "META-INF/LGPL2.1",
+        )
     }
 }
 
@@ -101,19 +107,18 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+    testImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 
     // Testing
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlin.test)
     testImplementation(libs.kotest.runner.junit5)
-    testImplementation(libs.kotest.assertions.core)
-    testImplementation(libs.kotest.property)
+    testImplementation(libs.bundles.kotest)
 
     // Android Testing
-    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.bundles.android.test)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
 
     // Debug
     debugImplementation(libs.androidx.ui.tooling)
