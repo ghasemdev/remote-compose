@@ -113,14 +113,18 @@ dependencies {
     // Testing
     testImplementation(libs.kotest.runner.junit5)
     testImplementation(libs.bundles.kotest)
+    testImplementation(libs.test.mockk.core)
 
     // Android Testing
     androidTestImplementation(libs.bundles.android.test)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.test.mockk.android)
 
     // Debug
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    debugImplementation(libs.slf4j)
+    debugRuntimeOnly(libs.logback.classic)
 }
