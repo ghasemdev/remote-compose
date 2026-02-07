@@ -51,10 +51,16 @@ ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
 # Remote Compose
-androidx-compose-remote-core = { group = "androidx.compose.remote", name = "remote-core", version.ref = "remoteCompose" }
-androidx-compose-remote-creation-core = { group = "androidx.compose.remote", name = "remote-creation-core", version.ref = "remoteCompose" }
-androidx-compose-remote-player-core = { group = "androidx.compose.remote", name = "remote-player-core", version.ref = "remoteCompose" }
-androidx-compose-remote-player-view = { group = "androidx.compose.remote", name = "remote-player-view", version.ref = "remoteCompose" }
+androidx-compose-remote-core = { module = "androidx.compose.remote:remote-core", version.ref = "remoteCompose" }
+androidx-compose-remote-creation = { module = "androidx.compose.remote:remote-creation", version.ref = "remoteCompose" }
+androidx-compose-remote-creation-android = { module = "androidx.compose.remote:remote-creation-android", version.ref = "remoteCompose" }
+androidx-compose-remote-creation-compose = { module = "androidx.compose.remote:remote-creation-compose", version.ref = "remoteCompose" }
+androidx-compose-remote-creation-core = { module = "androidx.compose.remote:remote-creation-core", version.ref = "remoteCompose" }
+androidx-compose-remote-creation-jvm = { module = "androidx.compose.remote:remote-creation-jvm", version.ref = "remoteCompose" }
+androidx-compose-remote-player-core = { module = "androidx.compose.remote:remote-player-core", version.ref = "remoteCompose" }
+androidx-compose-remote-player-view = { module = "androidx.compose.remote:remote-player-view", version.ref = "remoteCompose" }
+androidx-compose-remote-player-compose = { module = "androidx.compose.remote:remote-player-compose", version.ref = "remoteCompose" }
+androidx-compose-remote-tooling-preview = { module = "androidx.compose.remote:remote-tooling-preview", version.ref = "remoteCompose" }
 
 # Kotlin Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }

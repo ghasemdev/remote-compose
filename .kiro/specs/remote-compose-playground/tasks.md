@@ -15,10 +15,10 @@ This implementation plan converts the Remote Compose playground design into disc
   - _Requirements: 7.1, 7.2, 7.3_
 
 - [ ] 2. Implement core Remote Compose server infrastructure
-  - [ ] 2.1 Create RemoteCreationApi wrapper for androidx.compose.remote.creation
-    - Implement AndroidXRemoteCreationApi class wrapping library APIs
-    - Create helper methods for common UI components (Text, Button, Column)
-    - Add document builder pattern for complex UI construction
+  - [-] 2.1 Create RemoteCreationService for androidx.compose.remote.creation integration
+    - Implement RemoteCreationService class using library APIs directly
+    - Create document builder methods for template-based construction
+    - Add helper methods for common document patterns (no wrapper functions needed)
     - _Requirements: 1.1, 7.4_
 
   - [ ]* 2.2 Write property test for document creation API compliance
@@ -36,10 +36,10 @@ This implementation plan converts the Remote Compose playground design into disc
     - **Validates: Requirements 1.4**
 
 - [ ] 3. Implement Remote Compose client infrastructure
-  - [ ] 3.1 Create DocumentPlayerWrapper for androidx.compose.remote.player
-    - Implement AndroidXDocumentPlayer class wrapping library APIs
-    - Create @Composable RenderDocument function
-    - Add error handling for rendering failures
+  - [ ] 3.1 Create DocumentPlayerService for androidx.compose.remote.player integration
+    - Implement DocumentPlayerService class using library APIs directly
+    - Create @Composable RenderDocument function using remote player APIs
+    - Add error handling for rendering failures (no wrapper functions needed)
     - _Requirements: 2.1, 2.2, 7.5_
 
   - [ ]* 3.2 Write property test for document rendering API compliance

@@ -29,24 +29,20 @@ dependencies {
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.server.compression)
     implementation(libs.ktor.server.call.logging)
-    
-    // Remote Compose - Server side (creation)
-    implementation(libs.androidx.compose.remote.core)
-    implementation(libs.androidx.compose.remote.creation.core)
-    
+
     // Kotlin Serialization
     implementation(libs.kotlinx.serialization.json)
-    
+
     // Security
     implementation(libs.bouncycastle.provider)
     implementation(libs.bouncycastle.pkix)
-    
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
-    
+
     // Logging
     implementation(libs.logback.classic)
-    
+
     // Testing
     testImplementation(libs.kotlin.test)
     testImplementation(libs.ktor.server.test.host)

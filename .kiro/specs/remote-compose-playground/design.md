@@ -86,22 +86,21 @@ interface RemoteComposeServer {
 }
 
 class KtorRemoteComposeServer(
-    private val creationApi: RemoteCreationApi,
+    private val creationService: RemoteCreationService,
     private val signingService: SigningService
 ) : RemoteComposeServer
 ```
 
-#### Remote Creation API Wrapper
+#### Remote Creation API Integration
 ```kotlin
-interface RemoteCreationApi {
+interface RemoteCreationService {
     fun createDocument(builder: RemoteDocumentBuilder.() -> Unit): RemoteDocument
-    fun createColumn(content: List<RemoteComponent>): RemoteComponent
-    fun createText(text: String, style: TextStyle? = null): RemoteComponent
-    fun createButton(text: String, onClick: RemoteAction): RemoteComponent
+    fun buildDocumentFromTemplate(templateId: String, parameters: Map<String, Any>): RemoteDocument
 }
 
-class AndroidXRemoteCreationApi : RemoteCreationApi {
-    // Wraps androidx.compose.remote.creation APIs
+class RemoteCreationService {
+    // Uses androidx.compose.remote.creation APIs directly
+    // No wrapper functions needed - library provides RemoteText, RemoteColumn, etc.
 }
 ```
 
@@ -179,9 +178,9 @@ data class CacheMetrics(
 )
 ```
 
-#### Document Player Wrapper
+#### Document Player Integration
 ```kotlin
-interface DocumentPlayerWrapper {
+interface DocumentPlayerService {
     @Composable
     fun RenderDocument(
         document: RemoteDocument,
@@ -193,8 +192,9 @@ interface DocumentPlayerWrapper {
     fun getCapabilities(): Set<RemoteCapability>
 }
 
-class AndroidXDocumentPlayer : DocumentPlayerWrapper {
-    // Wraps androidx.compose.remote.player APIs
+class DocumentPlayerService {
+    // Uses androidx.compose.remote.player APIs directly
+    // No wrapper functions needed - library provides direct rendering capabilities
 }
 ```
 
