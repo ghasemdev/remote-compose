@@ -4,6 +4,7 @@ package com.parsomash.remote.compose.document
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.player.core.RemoteDocument
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +38,7 @@ class DocumentGenerationService(
         title: String = documentId,
         description: String = "",
         tags: List<String> = emptyList(),
-        content: @Composable () -> Unit,
+        content: @RemoteComposable @Composable () -> Unit,
         onSuccess: (RemoteDocument, DocumentMetadata) -> Unit = { _, _ -> },
         onError: (Exception) -> Unit = {}
     ) {
