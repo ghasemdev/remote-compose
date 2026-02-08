@@ -1,20 +1,18 @@
 package com.parsomash.remote.compose.server
 
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import com.parsomash.remote.compose.server.files.KtorFileServer
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
-}
+    // Get documents directory from environment or use default
+    val documentsDir = System.getenv("DOCUMENTS_DIR")
+        ?: "${System.getProperty("user.home")}/remote-compose-documents"
+    val fileServer = KtorFileServer(documentsDir)
 
-fun Application.module() {
-    routing {
-        get("/") {
-            call.respondText("Remote Compose Server is running!")
-        }
-    }
+    val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
+
+    embeddedServer(Netty, port = port) {
+        fileServerModule(fileServer)
+    }.start(wait = true)
 }

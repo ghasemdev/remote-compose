@@ -42,7 +42,7 @@ This implementation plan converts the Remote Compose playground design into disc
     - _Requirements: 1.5_
 
 - [ ] 3. Implement simple Ktor file server
-  - [ ] 3.1 Create KtorFileServer for serving pre-generated documents
+  - [x] 3.1 Create KtorFileServer for serving pre-generated documents
     - Implement basic file server with no Remote Compose dependencies
     - Add REST endpoints for document file retrieval
     - Configure HTTP/2 and CORS for Android client access
