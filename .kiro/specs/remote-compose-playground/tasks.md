@@ -35,7 +35,7 @@ This implementation plan converts the Remote Compose playground design into disc
     - **Property 2: Document Serialization Round-Trip Consistency**
     - **Validates: Requirements 1.2, 4.3**
 
-  - [ ] 2.5 Integrate document generation with file storage
+  - [x] 2.5 Integrate document generation with file storage
     - Connect DocumentGenerator with FileSystemManager
     - Add sample document generation for testing
     - Ensure generated files are properly saved and accessible

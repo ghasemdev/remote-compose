@@ -28,9 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.tooling.preview.Preview
-import com.parsomash.remote.compose.document.DocumentGeneratorImpl
-import com.parsomash.remote.compose.document.FileSystemManagerImpl
-import kotlinx.coroutines.launch
+import com.parsomash.remote.compose.document.DocumentMetadata
+import com.parsomash.remote.compose.document.createDocumentGenerationService
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,31 +49,36 @@ fun Main(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var documentState by remember { mutableStateOf<RemoteDocument?>(null) }
+    var documentMetadata by remember { mutableStateOf<DocumentMetadata?>(null) }
 
-    // Create DocumentGenerator with FileSystemManager
-    val fileSystemManager = remember { FileSystemManagerImpl(context) }
-    val documentGenerator = remember { DocumentGeneratorImpl(fileSystemManager) }
+    // Create DocumentGenerationService for integrated document generation and storage
+    val documentService = remember {
+        createDocumentGenerationService(context = context, coroutineScope = coroutineScope)
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Use the new DocumentGenerator to create and save documents
-        documentGenerator.GenerateAndSaveDocument(
+        // Use the DocumentGenerationService to generate and persist documents
+        documentService.GenerateAndPersistDocument(
             documentId = "sample_greeting",
+            title = "Sample Greeting Card",
+            description = "A simple greeting demonstrating Remote Compose integration",
+            tags = listOf("sample", "greeting", "demo"),
             content = { Greeting(modifier = RemoteModifier.fillMaxSize()) },
-            onDocumentGenerated = { document, bytes ->
-                println("Document generated: $document")
+            onSuccess = { document, metadata ->
                 if (documentState == null) {
                     documentState = document
-
-                    // Save the document bytes to file system
-                    coroutineScope.launch {
-                        try {
-                            documentGenerator.saveDocumentBytes("sample_greeting", bytes)
-                            println("Document saved to file system")
-                        } catch (e: Exception) {
-                            println("Failed to save document: ${e.message}")
-                        }
-                    }
+                    documentMetadata = metadata
+                    println("Document generated and saved successfully:")
+                    println("  ID: ${metadata.id}")
+                    println("  Title: ${metadata.title}")
+                    println("  File: ${metadata.filePath}")
+                    println("  Size: ${metadata.fileSize} bytes")
+                    println("  Checksum: ${metadata.checksum}")
                 }
+            },
+            onError = { error ->
+                println("Failed to generate or save document: ${error.message}")
+                error.printStackTrace()
             }
         )
 
