@@ -14,6 +14,12 @@ import java.nio.file.AccessDeniedException
  * Ktor-based file server for serving pre-generated Remote Compose documents.
  * This implementation has no Remote Compose dependencies and simply serves files.
  * 
+ * File Update Detection:
+ * - Always reads files directly from disk on each request (no caching)
+ * - Returns file modification timestamp with each document
+ * - Guarantees that the latest version of any file is always served
+ * - File updates are immediately available on the next request
+ * 
  * Thread-safety: This implementation is designed to handle concurrent requests safely.
  * File reads are performed on the IO dispatcher and use immutable file references.
  * The semaphore limits concurrent file operations to prevent resource exhaustion.
@@ -53,9 +59,10 @@ class KtorFileServer(
     init {
         logger.info("KtorFileServer initialized with directory: ${documentsDir.absolutePath}")
         logger.info("Max concurrent reads: $maxConcurrentReads")
+        logger.info("File update detection: ENABLED (always serves latest version)")
     }
 
-    override suspend fun serveDocument(documentId: String): ByteArray {
+    override suspend fun serveDocument(documentId: String): DocumentWithMetadata {
         logger.debug("Request to serve document: $documentId")
         
         // Validate document ID to prevent path traversal attacks
@@ -84,8 +91,11 @@ class KtorFileServer(
                     throw IOException("Document file is not readable: $documentId")
                 }
                 
+                // Capture file metadata BEFORE reading to ensure consistency
                 val fileSize = file.length()
-                logger.info("Serving document: $documentId (size: $fileSize bytes)")
+                val lastModified = file.lastModified()
+                
+                logger.info("Serving document: $documentId (size: $fileSize bytes, lastModified: $lastModified)")
                 
                 val bytes = try {
                     file.readBytes()
@@ -94,8 +104,14 @@ class KtorFileServer(
                     throw IOException("Failed to read document file: $documentId", e)
                 }
                 
-                logger.debug("Successfully served document: $documentId ($fileSize bytes)")
-                bytes
+                logger.debug("Successfully served document: $documentId ($fileSize bytes, modified: $lastModified)")
+                
+                DocumentWithMetadata(
+                    documentId = documentId,
+                    content = bytes,
+                    lastModified = lastModified,
+                    size = fileSize
+                )
             } catch (e: DocumentNotFoundException) {
                 // Re-throw DocumentNotFoundException as-is
                 throw e

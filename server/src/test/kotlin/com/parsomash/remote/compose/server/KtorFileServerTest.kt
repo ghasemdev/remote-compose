@@ -36,7 +36,10 @@ class KtorFileServerTest {
         val result = fileServer.serveDocument(documentId)
 
         // Verify
-        assertContentEquals(content, result)
+        assertContentEquals(content, result.content)
+        assertEquals(documentId, result.documentId)
+        assertEquals(content.size.toLong(), result.size)
+        assertTrue(result.lastModified > 0)
     }
 
     @Test
@@ -141,9 +144,11 @@ class KtorFileServerTest {
 
         // Verify all documents were served correctly
         assertEquals(10, results.size)
-        results.forEachIndexed { index, bytes ->
+        results.forEachIndexed { index, docWithMetadata ->
             val expectedContent = "Content for doc${index + 1}"
-            assertContentEquals(expectedContent.toByteArray(), bytes)
+            assertContentEquals(expectedContent.toByteArray(), docWithMetadata.content)
+            assertEquals("doc${index + 1}", docWithMetadata.documentId)
+            assertTrue(docWithMetadata.lastModified > 0)
         }
     }
 
@@ -165,6 +170,81 @@ class KtorFileServerTest {
         assertEquals(20, results.size)
         results.forEach { documents ->
             assertEquals(5, documents.size)
+        }
+    }
+
+    @Test
+    fun `test file update detection serves latest version`() = runBlocking {
+        // Create initial document
+        val documentId = "update-test"
+        val initialContent = "Initial content".toByteArray()
+        val file = File(tempDir, "$documentId.rcd")
+        file.writeBytes(initialContent)
+
+        // Serve the initial document
+        val initialResult = fileServer.serveDocument(documentId)
+        assertContentEquals(initialContent, initialResult.content)
+        val initialModifiedTime = initialResult.lastModified
+
+        // Wait a bit to ensure different modification time
+        Thread.sleep(10)
+
+        // Update the document file
+        val updatedContent = "Updated content with more data".toByteArray()
+        file.writeBytes(updatedContent)
+
+        // Serve the document again - should get updated version
+        val updatedResult = fileServer.serveDocument(documentId)
+        assertContentEquals(updatedContent, updatedResult.content)
+        assertEquals(updatedContent.size.toLong(), updatedResult.size)
+        
+        // Verify modification time changed
+        assertTrue(updatedResult.lastModified >= initialModifiedTime, 
+            "Updated file should have same or later modification time")
+    }
+
+    @Test
+    fun `test file modification time tracking is accurate`() = runBlocking {
+        // Create a document
+        val documentId = "time-test"
+        val content = "Test content".toByteArray()
+        val file = File(tempDir, "$documentId.rcd")
+        file.writeBytes(content)
+
+        // Get the actual file modification time
+        val actualModTime = file.lastModified()
+
+        // Serve the document
+        val result = fileServer.serveDocument(documentId)
+
+        // Verify the modification time matches
+        assertEquals(actualModTime, result.lastModified, 
+            "Served document modification time should match file system")
+    }
+
+    @Test
+    fun `test multiple updates are immediately available`() = runBlocking {
+        // Create initial document
+        val documentId = "multi-update-test"
+        val file = File(tempDir, "$documentId.rcd")
+        
+        // Perform multiple updates and verify each is served immediately
+        val updates = listOf("Version 1", "Version 2", "Version 3", "Version 4")
+        val results = mutableListOf<Long>()
+        
+        updates.forEach { version ->
+            Thread.sleep(10) // Ensure different modification times
+            file.writeBytes(version.toByteArray())
+            
+            val result = fileServer.serveDocument(documentId)
+            assertContentEquals(version.toByteArray(), result.content)
+            results.add(result.lastModified)
+        }
+        
+        // Verify modification times are non-decreasing (each update has same or later time)
+        for (i in 1 until results.size) {
+            assertTrue(results[i] >= results[i - 1], 
+                "Each update should have same or later modification time than previous")
         }
     }
 }

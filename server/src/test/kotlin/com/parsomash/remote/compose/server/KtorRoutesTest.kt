@@ -235,4 +235,73 @@ class KtorRoutesTest {
             assertEquals(HttpStatusCode.OK, response.status)
         }
     }
+
+    @Test
+    fun `GET api documents id includes Last-Modified header`() = testApplication {
+        application {
+            val fileServer = KtorFileServer(tempDir.absolutePath)
+            fileServerModule(fileServer)
+        }
+
+        val response = client.get("/api/documents/sample-doc")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertNotNull(response.headers["Last-Modified"], "Last-Modified header should be present")
+        assertNotNull(response.headers["ETag"], "ETag header should be present")
+        assertNotNull(response.headers["Cache-Control"], "Cache-Control header should be present")
+    }
+
+    @Test
+    fun `File updates are immediately served with updated Last-Modified`() = testApplication {
+        application {
+            val fileServer = KtorFileServer(tempDir.absolutePath)
+            fileServerModule(fileServer)
+        }
+
+        // Get initial document
+        val initialResponse = client.get("/api/documents/sample-doc")
+        assertEquals(HttpStatusCode.OK, initialResponse.status)
+        val initialLastModified = initialResponse.headers["Last-Modified"]
+        val initialETag = initialResponse.headers["ETag"]
+        val initialContent = initialResponse.bodyAsText()
+
+        // Wait a bit to ensure different modification time
+        Thread.sleep(100)
+
+        // Update the file
+        val updatedContent = "Updated sample document content with more data"
+        File(tempDir, "sample-doc.rcd").writeBytes(updatedContent.toByteArray())
+
+        // Get updated document
+        val updatedResponse = client.get("/api/documents/sample-doc")
+        assertEquals(HttpStatusCode.OK, updatedResponse.status)
+        val updatedLastModified = updatedResponse.headers["Last-Modified"]
+        val updatedETag = updatedResponse.headers["ETag"]
+        val updatedResponseContent = updatedResponse.bodyAsText()
+
+        // Verify content changed
+        assertEquals(updatedContent, updatedResponseContent)
+        assertTrue(initialContent != updatedResponseContent, "Content should be different after update")
+
+        // Verify headers changed (ETag should definitely change, Last-Modified should be same or later)
+        assertNotNull(updatedLastModified)
+        assertNotNull(updatedETag)
+        assertTrue(initialETag != updatedETag, "ETag should change when file is updated")
+    }
+
+    @Test
+    fun `Cache-Control header prevents stale content caching`() = testApplication {
+        application {
+            val fileServer = KtorFileServer(tempDir.absolutePath)
+            fileServerModule(fileServer)
+        }
+
+        val response = client.get("/api/documents/sample-doc")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        val cacheControl = response.headers["Cache-Control"]
+        assertNotNull(cacheControl)
+        assertTrue(cacheControl.contains("must-revalidate"), 
+            "Cache-Control should require revalidation")
+    }
 }

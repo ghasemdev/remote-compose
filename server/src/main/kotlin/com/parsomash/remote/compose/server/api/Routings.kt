@@ -63,12 +63,33 @@ fun Routing.configureRoutes(fileServer: FileServer) {
             logger.info("Received request for document: $documentId")
 
             try {
-                val documentBytes = fileServer.serveDocument(documentId)
+                val documentWithMetadata = fileServer.serveDocument(documentId)
                 val duration = System.currentTimeMillis() - startTime
                 
-                logger.info("Successfully served document: $documentId (${documentBytes.size} bytes, took ${duration}ms)")
+                logger.info("Successfully served document: $documentId (${documentWithMetadata.size} bytes, lastModified: ${documentWithMetadata.lastModified}, took ${duration}ms)")
+                
+                // Add Last-Modified header to support client-side caching and update detection
+                call.response.headers.append(
+                    "Last-Modified",
+                    java.time.Instant.ofEpochMilli(documentWithMetadata.lastModified)
+                        .atZone(java.time.ZoneId.of("GMT"))
+                        .format(java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME)
+                )
+                
+                // Add Cache-Control header to allow caching but require revalidation
+                call.response.headers.append(
+                    "Cache-Control",
+                    "private, must-revalidate, max-age=0"
+                )
+                
+                // Add ETag based on last modified time for efficient update detection
+                call.response.headers.append(
+                    "ETag",
+                    "\"${documentId}-${documentWithMetadata.lastModified}\""
+                )
+                
                 call.respondBytes(
-                    bytes = documentBytes,
+                    bytes = documentWithMetadata.content,
                     contentType = ContentType.Application.OctetStream,
                     status = HttpStatusCode.OK
                 )
