@@ -73,7 +73,7 @@ This implementation plan converts the Remote Compose playground design into disc
     - **Validates: Requirements 1.5**
 
 - [ ] 4. Implement Android app document consumption infrastructure
-  - [ ] 4.1 Create DocumentPlayerService for androidx.compose.remote.player integration
+  - [x] 4.1 Create DocumentPlayerService for androidx.compose.remote.player integration
     - Implement DocumentPlayerService class using RemoteDocumentPlayer
     - Create @Composable RenderDocument function using remote player APIs
     - Add error handling for rendering failures (no wrapper functions needed)
@@ -83,7 +83,7 @@ This implementation plan converts the Remote Compose playground design into disc
     - **Property 6: Document Rendering Using Player APIs**
     - **Validates: Requirements 2.1, 6.5**
 
-  - [ ] 4.3 Implement KtorClientManager for network communication
+  - [x] 4.3 Implement KtorClientManager for network communication
     - Create Ktor client with HTTP/2 support for fetching document files
     - Implement document fetching with retry logic and exponential backoff
     - Add connection configuration and timeout handling
