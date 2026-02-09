@@ -14,7 +14,10 @@ import io.ktor.server.plugins.compression.gzip
 import io.ktor.server.plugins.compression.minimumSize
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.path
 import io.ktor.server.routing.routing
+import org.slf4j.event.Level
 
 fun Application.fileServerModule(fileServer: FileServer) {
     // Install plugins
@@ -39,7 +42,16 @@ fun Application.fileServerModule(fileServer: FileServer) {
         }
     }
 
-    install(CallLogging)
+    install(CallLogging) {
+        level = Level.INFO
+        filter { call -> call.request.path().startsWith("/api") }
+        format { call ->
+            val status = call.response.status()
+            val httpMethod = call.request.httpMethod.value
+            val path = call.request.path()
+            "$httpMethod $path - $status"
+        }
+    }
 
     // Configure routing
     routing {

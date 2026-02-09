@@ -2,6 +2,8 @@ package com.parsomash.remote.compose.server
 
 import com.parsomash.remote.compose.server.files.DocumentNotFoundException
 import com.parsomash.remote.compose.server.files.KtorFileServer
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -90,5 +92,79 @@ class KtorFileServerTest {
         assertEquals("$documentId.rcd", metadata.filename)
         assertEquals(content.size.toLong(), metadata.size)
         assertTrue(metadata.lastModified > 0)
+    }
+
+    @Test
+    fun `test invalid document ID with path traversal is rejected`() {
+        runBlocking {
+            // Try to serve a document with path traversal
+            assertFailsWith<IllegalArgumentException> {
+                fileServer.serveDocument("../etc/passwd")
+            }
+        }
+    }
+
+    @Test
+    fun `test invalid document ID with forward slash is rejected`() {
+        runBlocking {
+            // Try to serve a document with forward slash
+            assertFailsWith<IllegalArgumentException> {
+                fileServer.serveDocument("path/to/doc")
+            }
+        }
+    }
+
+    @Test
+    fun `test invalid document ID with backslash is rejected`() {
+        runBlocking {
+            // Try to serve a document with backslash
+            assertFailsWith<IllegalArgumentException> {
+                fileServer.serveDocument("path\\to\\doc")
+            }
+        }
+    }
+
+    @Test
+    fun `test concurrent document serving handles multiple requests`() = runBlocking {
+        // Create test documents
+        val documentIds = (1..10).map { "doc$it" }
+        documentIds.forEach { id ->
+            File(tempDir, "$id.rcd").writeBytes("Content for $id".toByteArray())
+        }
+
+        // Serve documents concurrently
+        val results = documentIds.map { id ->
+            async {
+                fileServer.serveDocument(id)
+            }
+        }.awaitAll()
+
+        // Verify all documents were served correctly
+        assertEquals(10, results.size)
+        results.forEachIndexed { index, bytes ->
+            val expectedContent = "Content for doc${index + 1}"
+            assertContentEquals(expectedContent.toByteArray(), bytes)
+        }
+    }
+
+    @Test
+    fun `test concurrent list operations complete successfully`() = runBlocking {
+        // Create test documents
+        repeat(5) { i ->
+            File(tempDir, "doc$i.rcd").writeBytes("content$i".toByteArray())
+        }
+
+        // List documents concurrently
+        val results = (1..20).map {
+            async {
+                fileServer.listDocuments()
+            }
+        }.awaitAll()
+
+        // Verify all list operations returned the same results
+        assertEquals(20, results.size)
+        results.forEach { documents ->
+            assertEquals(5, documents.size)
+        }
     }
 }
