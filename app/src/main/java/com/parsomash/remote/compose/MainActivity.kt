@@ -30,6 +30,10 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.tooling.preview.Preview
 import com.parsomash.remote.compose.document.DocumentMetadata
 import com.parsomash.remote.compose.document.createDocumentGenerationService
+import com.parsomash.remote.compose.document.createDocumentPlayerService
+import com.parsomash.remote.compose.document.createDocumentRenderingService
+import com.parsomash.remote.compose.network.ClientConfig
+import com.parsomash.remote.compose.network.KtorClientManagerImpl
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,48 +54,85 @@ fun Main(modifier: Modifier = Modifier) {
     val coroutineScope = rememberCoroutineScope()
     var documentState by remember { mutableStateOf<RemoteDocument?>(null) }
     var documentMetadata by remember { mutableStateOf<DocumentMetadata?>(null) }
+    var useNetworkFetching by remember { mutableStateOf(false) }
 
     // Create DocumentGenerationService for integrated document generation and storage
     val documentService = remember {
         createDocumentGenerationService(context = context, coroutineScope = coroutineScope)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Use the DocumentGenerationService to generate and persist documents
-        documentService.GenerateAndPersistDocument(
-            documentId = "sample_greeting",
-            title = "Sample Greeting Card",
-            description = "A simple greeting demonstrating Remote Compose integration",
-            tags = listOf("sample", "greeting", "demo"),
-            content = { Greeting(modifier = RemoteModifier.fillMaxSize()) },
-            onSuccess = { document, metadata ->
-                if (documentState == null) {
-                    documentState = document
-                    documentMetadata = metadata
-                    println("Document generated and saved successfully:")
-                    println("  ID: ${metadata.id}")
-                    println("  Title: ${metadata.title}")
-                    println("  File: ${metadata.filePath}")
-                    println("  Size: ${metadata.fileSize} bytes")
-                    println("  Checksum: ${metadata.checksum}")
-                }
-            },
-            onError = { error ->
-                println("Failed to generate or save document: ${error.message}")
-                error.printStackTrace()
-            }
+    // Create integrated document fetching and rendering service
+    val ktorClientManager = remember {
+        KtorClientManagerImpl(
+            config = ClientConfig(
+                baseUrl = "http://localhost:8080/",
+                enableLogging = true
+            )
         )
+    }
 
-        // Render the generated document
-        if (documentState != null) {
-            val windowInfo = LocalWindowInfo.current
-            RemoteDocumentPlayer(
-                document = documentState!!.document,
-                windowInfo.containerSize.width,
-                windowInfo.containerSize.height,
-                modifier = modifier.fillMaxSize(),
-                0,
-                onNamedAction = { _, _, _ -> },
+    val documentPlayerService = remember { createDocumentPlayerService() }
+
+    val documentRenderingService = remember {
+        createDocumentRenderingService(
+            ktorClientManager = ktorClientManager,
+            documentPlayerService = documentPlayerService
+        )
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (!useNetworkFetching) {
+            // First generate and save the document locally
+            documentService.GenerateAndPersistDocument(
+                documentId = "sample_greeting",
+                title = "Sample Greeting Card",
+                description = "A simple greeting demonstrating Remote Compose integration",
+                tags = listOf("sample", "greeting", "demo"),
+                content = { Greeting(modifier = RemoteModifier.fillMaxSize()) },
+                onSuccess = { document, metadata ->
+                    if (documentState == null) {
+                        documentState = document
+                        documentMetadata = metadata
+                        println("Document generated and saved successfully:")
+                        println("  ID: ${metadata.id}")
+                        println("  Title: ${metadata.title}")
+                        println("  File: ${metadata.filePath}")
+                        println("  Size: ${metadata.fileSize} bytes")
+                        println("  Checksum: ${metadata.checksum}")
+
+                        // Switch to network fetching mode after generation
+                        useNetworkFetching = true
+                    }
+                },
+                onError = { error ->
+                    println("Failed to generate or save document: ${error.message}")
+                    error.printStackTrace()
+                }
+            )
+
+            // Render the locally generated document
+            if (documentState != null) {
+                val windowInfo = LocalWindowInfo.current
+                RemoteDocumentPlayer(
+                    document = documentState!!.document,
+                    windowInfo.containerSize.width,
+                    windowInfo.containerSize.height,
+                    modifier = modifier.fillMaxSize(),
+                    0,
+                    onNamedAction = { _, _, _ -> },
+                )
+            }
+        } else {
+            // Demonstrate integrated document fetching and rendering
+            documentRenderingService.FetchAndRenderDocument(
+                documentId = "sample_greeting",
+                modifier = modifier,
+                onError = { error ->
+                    println("Document rendering error: ${error.message}")
+                    error.printStackTrace()
+                    // Fallback to local rendering if network fails
+                    useNetworkFetching = false
+                }
             )
         }
     }
